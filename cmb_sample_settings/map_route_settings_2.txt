@@ -19,15 +19,21 @@ Group1.groupID = x
 Group1.nrofHosts = 1
 Group1.nrofInterfaces = 1
 Group1.interface1 = myInterface
-Group1.movementModel = MapRouteMovement
+Group1.movementModel = TUMmovment
+Group1.waitTime = 100, 100
 Group1.routeFile = data/Campus/map_roads.wkt
 Group1.routeType = 1
 Group1.router = PassiveRouter
+Group1.clock_begin = 1900
+Group1.clock_end = 3500
+
+Group1.pois = 1,1.0
+PointsOfInterest.poiFile1 = data/wkt/dummy_poi.wkt
 
 ## Map based movement -movement model specific settings
-MapBasedMovement.nrofMapFiles = 2
+MapBasedMovement.nrofMapFiles = 1
 MapBasedMovement.mapFile1 = data/Campus/map_campus.osm.wkt
-MapBasedMovement.mapFile2 = data/Campus/benches.wkt
+##MapBasedMovement.mapFile2 = data/Campus/benches.wkt
 
 # Reports
 Report.nrofReports = 1

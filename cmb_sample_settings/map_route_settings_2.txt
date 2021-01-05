@@ -1,31 +1,66 @@
 # Settings for map route based movement in a triangle.
 
-Scenario.name = MapRouteMovement
+Scenario.name = TUM_FMI
 Scenario.endTime = 6000
 Scenario.updateInterval = 0.1
-Scenario.simulateConnections = false
+Scenario.simulateConnections = true
 MovementModel.worldSize = 1000,1000
 Events.nrof = 0
 
 # Communication Interface
+firstinterface.type = SimpleBroadcastInterface
 myInterface.type = SimpleBroadcastInterface
-myInterface.transmitRange = 0
-myInterface.transmitSpeed = 0
+firstinterface.transmitSpeed = 25k
+firstinterface.transmitRange = 2
 
 # Groups
 Scenario.nrofHostGroups = 1
 
 Group1.groupID = x
-Group1.nrofHosts = 1
-Group1.nrofInterfaces = 1
-Group1.interface1 = myInterface
+Group1.nrofHosts = 15
+##Group1.nrofInterfaces = 1
+##Group1.interface1 = myInterface
 Group1.movementModel = TUMmovment
 Group1.waitTime = 100, 100
 Group1.routeFile = data/Campus/map_roads.wkt
 Group1.routeType = 1
-Group1.router = PassiveRouter
-Group1.clock_begin = 1900
+Group1.router = EpidemicRouter
+Group1.clock_begin = 500
 Group1.clock_end = 3500
+
+## does it do something?
+Group.bufferSize = 5M
+Group.waitTime = 0, 120
+Group.nrofHosts = 40
+Group.nrofApplications = 0
+
+Group.nrofInterfaces = 1
+Group.interface1 = firstinterface
+
+## Message creation parameters
+# How many event generators
+Events.nrof = 1
+# Class of the first event generator
+Events1.class = SingleMessageGenerator
+# (following settings are specific for the MessageEventGenerator class)
+# Creation interval in seconds (one new message every 25 to 35 seconds)
+Events1.interval = 100k,100k
+# Message sizes (50kB - 150kB)
+Events1.size = 50k,150k
+# range of message source/destination addresses
+Events1.hosts = 1,40
+Events1.toHosts = 0,0
+# Message ID prefix
+Events1.prefix = M
+
+# how many reports to load
+Report.nrofReports = 1
+# length of the warm up period (simulated seconds)
+Report.warmup = 0
+# default directory of reports (can be overridden per Report with output setting)
+Report.reportDir = reports/
+# Report classes to load
+Report.report1 = MessageStatsReport
 
 Group1.pois = 1,1.0
 PointsOfInterest.poiFile1 = data/wkt/dummy_poi.wkt

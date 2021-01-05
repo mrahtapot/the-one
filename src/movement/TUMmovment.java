@@ -67,7 +67,7 @@ public class TUMmovment extends MapBasedMovement implements
 	
 	// node counter
 	public int nodecounter = 0;
-	public int handover = nodecounter;
+	public static int total_nodecounter;
 
 	// read those clocks from the settings
 	public static final String CLOCK1_S = "clock_begin";
@@ -79,6 +79,7 @@ public class TUMmovment extends MapBasedMovement implements
 	 */
 	public TUMmovment(Settings settings) {
 		super(settings);
+		total_nodecounter = 0;
 		String fileName = settings.getSetting(ROUTE_FILE_S);
 		String sclock1 = settings.getSetting(CLOCK1_S);
 		String sclock2 = settings.getSetting(CLOCK2_S);
@@ -112,7 +113,7 @@ public class TUMmovment extends MapBasedMovement implements
 	 */
 	protected TUMmovment(TUMmovment proto) {
 		super(proto);
-		this.nodecounter = proto.nodecounter + 1;
+		this.nodecounter = total_nodecounter;
 		this.route = proto.allRoutes.get(proto.nextRouteIndex).replicate();
 		this.firstStopIndex = proto.firstStopIndex;
 
@@ -215,6 +216,7 @@ public class TUMmovment extends MapBasedMovement implements
 
 	@Override
 	public TUMmovment replicate() {
+		total_nodecounter++;
 		return new TUMmovment(this);
 	}
 

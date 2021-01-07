@@ -1,0 +1,188 @@
+# Settings for map route based movement in a triangle.
+
+Scenario.name = TUM_FMI
+Scenario.endTime = 6000
+Scenario.updateInterval = 0.1
+Scenario.simulateConnections = true
+MovementModel.worldSize = 1000,1000
+Events.nrof = 0
+
+
+# Groups
+Scenario.nrofHostGroups = 5
+Group.entry = data/Campus/map_entry.wkt
+
+# Group 1 Students, infected
+Group1.groupID = S
+Group1.nrofHosts = 2
+Group1.movementModel = TUMmovment
+Group1.waitTime = 600, 700
+Group1.routeFile = data/Campus/map_roads.wkt
+Group1.routeType = 2
+Group1.routeFirstStop = 0
+Group1.router = EpidemicRouter
+
+# Shedules
+# lunch
+Group1.clock_begin = 1500
+Group1.clock_end = 3500
+#work
+Group1.clock_wbegin = 1
+Group1.clock_wend = 4500
+
+# Assign private rooms
+Group1.type = Student
+Group1.privateRooms = data/Campus/map_Students.wkt
+
+# Group 5 Students, Lecture only
+Group5.groupID = S
+Group5.nrofHosts = 2
+Group5.movementModel = TUMmovment
+Group5.waitTime = 100, 700
+Group5.routeFile = data/Campus/map_roads.wkt
+Group5.routeType = 2
+Group5.routeFirstStop = 4
+Group5.router = EpidemicRouter
+
+# Shedules
+# lunch
+Group5.clock_begin = 1500
+Group5.clock_end = 1501
+#work
+Group5.clock_wbegin = 1300
+Group5.clock_wend = 2600
+
+# Assign private rooms
+Group5.type = Student
+Group5.privateRooms = data/Campus/map_Students.wkt
+
+# Group 4 Professors who dont leave Office
+Group4.groupID = p
+Group4.nrofHosts = 7
+Group4.movementModel = TUMmovment
+Group4.waitTime = 0, 100
+Group4.routeFile = data/Campus/map_roads.wkt
+Group4.routeType = 1
+Group4.routeFirstStop = 4
+Group4.router = EpidemicRouter
+
+# Shedules
+# lunch, here no lunch
+Group4.clock_begin = 1500
+Group4.clock_end = 1501
+#work
+Group4.clock_wbegin = 1
+Group4.clock_wend = 4900
+
+# Assign private rooms
+Group4.type = Professor
+Group4.privateRooms = data/Campus/map_privateRooms.wkt
+
+
+# Group 2 Teachers who eat, teach and visit/cowork with the Professors
+Group2.groupID = t
+Group2.nrofHosts = 5
+Group2.movementModel = TUMmovment
+Group2.waitTime = 0, 50
+Group2.routeFile = data/Campus/map_roads.wkt
+Group2.routeType = 2
+Group2.routeFirstStop = 4
+Group2.router = EpidemicRouter
+
+# Shedules
+# lunch
+Group2.clock_begin = 1500
+Group2.clock_end = 3500
+#work
+Group2.clock_wbegin = 1
+Group2.clock_wend = 4500
+
+# Assign private rooms
+Group2.type = Teacher
+Group2.privateRooms = data/Campus/map_RoomsLecture.wkt
+
+# Group 3 Students
+Group3.groupID = S
+Group3.nrofHosts = 25
+Group3.movementModel = TUMmovment
+Group3.waitTime = 100, 200
+Group3.routeFile = data/Campus/map_roads.wkt
+Group3.routeType = 2
+Group3.routeFirstStop = 4
+Group3.router = EpidemicRouter
+
+# Shedules
+# lunch
+Group3.clock_begin = 1500
+Group3.clock_end = 3500
+#work
+Group3.clock_wbegin = 1
+Group3.clock_wend = 4500
+
+# Assign private rooms
+Group3.type = Teacher
+Group3.privateRooms = data/Campus/map_Students.wkt
+
+## general lunch
+Group.pois = 1,1.0
+PointsOfInterest.poiFile1 = data/Campus/map_lunch.wkt
+
+
+## does it do something?
+Group.bufferSize = 5M
+Group.waitTime = 110, 120
+Group.nrofHosts = 40
+Group.nrofApplications = 0
+
+Group.nrofInterfaces = 1
+Group.interface1 = shortrangeinterface
+#Group.interface2 = longrangeinterface
+
+# Communication Interface
+# short range
+shortrangeinterface.type = SimpleBroadcastInterface
+shortrangeinterface.transmitSpeed = 200
+shortrangeinterface.transmitRange = 1
+
+# long range
+#longrangeinterface.type = SimpleBroadcastInterface
+#longrangeinterface.transmitSpeed = 5k
+#longrangeinterface.transmitRange = 2
+
+
+## Message creation parameters
+# How many event generators
+Events.nrof = 1
+# Class of the first event generator
+Events1.class = SingleMessageGenerator
+# (following settings are specific for the MessageEventGenerator class)
+# Creation interval in seconds (one new message every 25 to 35 seconds)
+Events1.interval = 100k,100k
+# Message sizes (50kB - 150kB)
+Events1.size = 50k,150k
+# range of message source/destination addresses
+Events1.hosts = 1,4
+Events1.toHosts = 0,0
+# Message ID prefix
+Events1.prefix = M
+
+# how many reports to load
+Report.nrofReports = 1
+# length of the warm up period (simulated seconds)
+Report.warmup = 0
+# default directory of reports (can be overridden per Report with output setting)
+Report.reportDir = reports/
+# Report classes to load
+Report.report1 = MessageStatsReport
+
+
+## Map based movement -movement model specific settings
+MapBasedMovement.nrofMapFiles = 1
+MapBasedMovement.mapFile1 = data/Campus/map_campus.osm.wkt
+##MapBasedMovement.mapFile2 = data/Campus/benches.wkt
+
+# Reports
+Report.nrofReports = 1
+Report.report1 = FlightLengthReport
+
+Report.reportDir = reports

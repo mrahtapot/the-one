@@ -9,7 +9,8 @@ Events.nrof = 0
 
 
 # Groups
-Scenario.nrofHostGroups = 4
+Scenario.nrofHostGroups = 5
+Group.entry = data/Campus/map_entry.wkt
 
 # Group 1 Students, infected
 Group1.groupID = S
@@ -33,6 +34,28 @@ Group1.clock_wend = 4500
 Group1.type = Student
 Group1.privateRooms = data/Campus/map_Students.wkt
 
+# Group 5 Students, Lecture only
+Group5.groupID = S
+Group5.nrofHosts = 2
+Group5.movementModel = TUMmovment
+Group5.waitTime = 100, 700
+Group5.routeFile = data/Campus/map_roads.wkt
+Group5.routeType = 2
+Group5.routeFirstStop = 4
+Group5.router = EpidemicRouter
+
+# Shedules
+# lunch
+Group5.clock_begin = 1500
+Group5.clock_end = 1501
+#work
+Group5.clock_wbegin = 1300
+Group5.clock_wend = 2600
+
+# Assign private rooms
+Group5.type = Student
+Group5.privateRooms = data/Campus/map_Students.wkt
+
 # Group 4 Professors who dont leave Office
 Group4.groupID = p
 Group4.nrofHosts = 7
@@ -49,7 +72,7 @@ Group4.clock_begin = 1500
 Group4.clock_end = 1501
 #work
 Group4.clock_wbegin = 1
-Group4.clock_wend = 4500
+Group4.clock_wend = 4900
 
 # Assign private rooms
 Group4.type = Professor
@@ -118,12 +141,12 @@ Group.interface2 = longrangeinterface
 # Communication Interface
 # short range
 shortrangeinterface.type = SimpleBroadcastInterface
-shortrangeinterface.transmitSpeed = 250k
+shortrangeinterface.transmitSpeed = 75k
 shortrangeinterface.transmitRange = 1
 
 # long range
 longrangeinterface.type = SimpleBroadcastInterface
-longrangeinterface.transmitSpeed = 25k
+longrangeinterface.transmitSpeed = 5k
 longrangeinterface.transmitRange = 2
 
 

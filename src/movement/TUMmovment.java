@@ -88,6 +88,11 @@ public class TUMmovment extends MapBasedMovement implements
 	private static MapRoute Rooms;
 	private MapNode room;
 
+	//define entry/exit
+	public static final String ENTRY_FILE_S = "entry";
+	private List<MapRoute> Route_entry = null;
+	private static MapRoute Entries;
+	private MapNode Entry;
 
 	/**
 	 * Creates a new movement model based on a Settings object's settings.
@@ -98,6 +103,7 @@ public class TUMmovment extends MapBasedMovement implements
 		total_nodecounter = 0;
 		String nodetype = settings.getSetting(NODE_TYPE);
 		String office_fileName = settings.getSetting(OFFICE_FILE_S);
+		String entry_fileName = settings.getSetting(ENTRY_FILE_S);
 		String fileName = settings.getSetting(ROUTE_FILE_S);
 		String sclock1 = settings.getSetting(CLOCK1_S);
 		String sclock2 = settings.getSetting(CLOCK2_S);
@@ -109,9 +115,11 @@ public class TUMmovment extends MapBasedMovement implements
 		clock_wbegin = Integer.parseInt(sclock1w);
 		clock_wend = Integer.parseInt(sclock2w);
 		int type = settings.getInt(ROUTE_TYPE_S);
+		nextRouteIndex = 0;
 		allRoutes = MapRoute.readRoutes(fileName, type, getMap());
 		Route_Offices = MapRoute.readRoutes(office_fileName, type, getMap());
-		nextRouteIndex = 0;
+		Route_entry = MapRoute.readRoutes(entry_fileName, type, getMap());
+		Entries = this.Route_entry .get(this.nextRouteIndex).replicate();
 		Rooms = this.Route_Offices.get(this.nextRouteIndex).replicate();
 		//this.room = Rooms.nextStop();
 
@@ -162,6 +170,7 @@ public class TUMmovment extends MapBasedMovement implements
 		this.pois = proto.pois;
 
 		this.room = Rooms.nextStop();
+		this.Entry = Entries.nextStop();
 
 		//proto.nextRouteIndex++; // give routes in order
 		if (proto.nextRouteIndex >= proto.allRoutes.size()) {
@@ -174,11 +183,12 @@ public class TUMmovment extends MapBasedMovement implements
 		//get current time for decision making
 		clock = SimClock.getIntTime();
 
-		//2do make decision
+
 		this.mode = 0;
 		boolean morning = (clock > clock_wbegin && clock < clock_begin);
 		boolean evening = (clock > clock_end && clock < clock_wend);
 		boolean lunch = (clock > clock_begin && clock < clock_end);
+		boolean out = (clock < clock_begin || clock > clock_end);
 		System.out.println(clock + "m:" +morning + " l:" + lunch + " e:" + evening);
 		if (lunch) {
 			// eating
@@ -186,8 +196,10 @@ public class TUMmovment extends MapBasedMovement implements
 			return getrandomPath();
 		} else if (morning || evening) {
 			return getworkPath();
+		} else if (clock > clock_wend) {
+			return getexitPath();
 		}
-		else {
+		else{
 			// static workshedule
 			return getstaticPath();
 
@@ -216,6 +228,24 @@ public class TUMmovment extends MapBasedMovement implements
 	public Path getworkPath() {
 		Path p = new Path(generateSpeed());
 		MapNode to = room;
+		List<MapNode> nodePath = pathFinder.getShortestPath(lastMapNode, to);
+
+		// this assertion should never fire if the map is checked in read phase
+		assert nodePath.size() > 0 : "No path from " + lastMapNode + " to " +
+				to + ". The simulation map isn't fully connected";
+
+		for (MapNode node : nodePath) { // create a Path from the shortest path
+			p.addWaypoint(node.getLocation());
+		}
+
+		lastMapNode = to;
+
+		return p;
+	}
+
+	public Path getexitPath() {
+		Path p = new Path(generateSpeed());
+		MapNode to = Entry;
 		List<MapNode> nodePath = pathFinder.getShortestPath(lastMapNode, to);
 
 		// this assertion should never fire if the map is checked in read phase

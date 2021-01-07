@@ -39,21 +39,26 @@ public class TUMmovment extends MapBasedMovement implements
 	 */
 	public static final String ROUTE_FIRST_STOP_S = "routeFirstStop";
 
+
 	/** the Dijkstra shortest path finder */
 	private DijkstraPathFinder pathFinder;
 
 	/** Prototype's reference to all routes read for the group */
 	private List<MapRoute> allRoutes = null;
 	/** next route's index to give by prototype */
-	private Integer nextRouteIndex = null;
+	private Integer nextRouteIndex = 1;
 	/** Index of the first stop for a group of nodes (or -1 for random) */
-	private int firstStopIndex = -1;
+	private int firstStopIndex = 1;
 
 	/** Route of the movement model's instance */
 	private MapRoute route;
 
 	//POI for POI Mode
 	private PointsOfInterest pois;
+
+	// type of Node
+	public static final String NODE_TYPE = "type";
+	private String type;
 
 	//Mode carry over
 	public int mode = 0;
@@ -64,6 +69,8 @@ public class TUMmovment extends MapBasedMovement implements
 	// 2 clocktimes, eg. for start and end of lunch
 	public int clock_begin;
 	public int clock_end;
+	public int clock_wbegin;
+	public int clock_wend;
 	
 	// node counter
 	public int nodecounter = 0;
@@ -72,6 +79,15 @@ public class TUMmovment extends MapBasedMovement implements
 	// read those clocks from the settings
 	public static final String CLOCK1_S = "clock_begin";
 	public static final String CLOCK2_S = "clock_end";
+	public static final String CLOCK1W_S = "clock_wbegin";
+	public static final String CLOCK2W_S = "clock_wend";
+
+	// defines the configuration setting and other neccesary variables for the personal offices
+	public static final String OFFICE_FILE_S = "privateRooms";
+	private List<MapRoute> Route_Offices = null;
+	private static MapRoute Rooms;
+	private MapNode room;
+
 
 	/**
 	 * Creates a new movement model based on a Settings object's settings.
@@ -80,14 +96,25 @@ public class TUMmovment extends MapBasedMovement implements
 	public TUMmovment(Settings settings) {
 		super(settings);
 		total_nodecounter = 0;
+		String nodetype = settings.getSetting(NODE_TYPE);
+		String office_fileName = settings.getSetting(OFFICE_FILE_S);
 		String fileName = settings.getSetting(ROUTE_FILE_S);
 		String sclock1 = settings.getSetting(CLOCK1_S);
 		String sclock2 = settings.getSetting(CLOCK2_S);
+		String sclock1w = settings.getSetting(CLOCK1W_S);
+		String sclock2w = settings.getSetting(CLOCK2W_S);
+		type = nodetype;
 		clock_begin = Integer.parseInt(sclock1);
 		clock_end = Integer.parseInt(sclock2);
+		clock_wbegin = Integer.parseInt(sclock1w);
+		clock_wend = Integer.parseInt(sclock2w);
 		int type = settings.getInt(ROUTE_TYPE_S);
 		allRoutes = MapRoute.readRoutes(fileName, type, getMap());
+		Route_Offices = MapRoute.readRoutes(office_fileName, type, getMap());
 		nextRouteIndex = 0;
+		Rooms = this.Route_Offices.get(this.nextRouteIndex).replicate();
+		//this.room = Rooms.nextStop();
+
 		pathFinder = new DijkstraPathFinder(getOkMapNodeTypes());
 		this.route = this.allRoutes.get(this.nextRouteIndex).replicate();
 		if (this.nextRouteIndex >= this.allRoutes.size()) {
@@ -114,8 +141,10 @@ public class TUMmovment extends MapBasedMovement implements
 	protected TUMmovment(TUMmovment proto) {
 		super(proto);
 		this.nodecounter = total_nodecounter;
-		this.route = proto.allRoutes.get(proto.nextRouteIndex).replicate();
+		this.route = proto.route;
+		//this.route = proto.allRoutes.get(proto.nextRouteIndex).replicate();
 		this.firstStopIndex = proto.firstStopIndex;
+		this.type = proto.type;
 
 		if (firstStopIndex < 0) {
 			/* set a random starting position on the route */
@@ -126,11 +155,15 @@ public class TUMmovment extends MapBasedMovement implements
 		}
 		this.clock_begin = proto.clock_begin;
 		this.clock_end = proto.clock_end;
+		this.clock_wbegin = proto.clock_wbegin;
+		this.clock_wend = proto.clock_wend;
 
 		this.pathFinder = proto.pathFinder;
 		this.pois = proto.pois;
 
-		proto.nextRouteIndex++; // give routes in order
+		this.room = Rooms.nextStop();
+
+		//proto.nextRouteIndex++; // give routes in order
 		if (proto.nextRouteIndex >= proto.allRoutes.size()) {
 			proto.nextRouteIndex = 0;
 		}
@@ -140,14 +173,19 @@ public class TUMmovment extends MapBasedMovement implements
 	public Path getPath() {
 		//get current time for decision making
 		clock = SimClock.getIntTime();
-		System.out.println(clock + " " + this.nodecounter);
+
 		//2do make decision
 		this.mode = 0;
-
-		if (clock > clock_begin && clock < clock_end) {
+		boolean morning = (clock > clock_wbegin && clock < clock_begin);
+		boolean evening = (clock > clock_end && clock < clock_wend);
+		boolean lunch = (clock > clock_begin && clock < clock_end);
+		System.out.println(clock + "m:" +morning + " l:" + lunch + " e:" + evening);
+		if (lunch) {
 			// eating
 			System.out.println ("eating");
 			return getrandomPath();
+		} else if (morning || evening) {
+			return getworkPath();
 		}
 		else {
 			// static workshedule
@@ -174,6 +212,25 @@ public class TUMmovment extends MapBasedMovement implements
 
 		return p;
 	}
+
+	public Path getworkPath() {
+		Path p = new Path(generateSpeed());
+		MapNode to = room;
+		List<MapNode> nodePath = pathFinder.getShortestPath(lastMapNode, to);
+
+		// this assertion should never fire if the map is checked in read phase
+		assert nodePath.size() > 0 : "No path from " + lastMapNode + " to " +
+				to + ". The simulation map isn't fully connected";
+
+		for (MapNode node : nodePath) { // create a Path from the shortest path
+			p.addWaypoint(node.getLocation());
+		}
+
+		lastMapNode = to;
+
+		return p;
+	}
+
 	public Path getrandomPath() {
 		Path p = new Path(generateSpeed());
 		MapNode to = pois.selectDestination();
